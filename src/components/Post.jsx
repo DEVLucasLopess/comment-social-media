@@ -1,15 +1,46 @@
-import React from 'react'
+import React, { useState } from 'react'
 import styles from './Post.module.css'
 import { Comment } from './Comment'
 import Avatar from './Avatar'
 
 export const Post = ({author, publishedAt, content}) => {
+    //formatar os dados de data/hora/ano
     const publishedDateFormatted = new Intl.DateTimeFormat('pt-BR', {
         day: '2-digit',
         month: 'long',
         hour: '2-digit',
         minute: '2-digit',
     }).format(publishedAt)
+
+    const [comments, setComments] = useState([
+        'Post muito legal, parabéns!'
+    ]);
+
+    const [newCommentText, setNewCommentText] = useState('');
+
+
+    function handleCreateNewComment() {
+        event.preventDefault()
+        setComments([...comments, newCommentText])
+        setNewCommentText('')
+    }
+
+    function handleNewCommentChange() {
+        setNewCommentText(event.target.value)
+        event.target.setCustomValidity('');
+    }
+
+    function deleteComment(itemDelete) {
+        const listaDeComentariosSemOqueDeletei = comments.filter(item => {
+            return item !== itemDelete;
+        })
+
+        setComments(listaDeComentariosSemOqueDeletei)
+    }
+
+    function handleNewComentInvalid () {
+        event.target.setCustomValidity('Este campo é obrigatorio!');
+    }
 
   return (
     <div>
@@ -27,28 +58,44 @@ export const Post = ({author, publishedAt, content}) => {
             </header>
 
             <div className={styles.content}>
-                {content.map((item, index) => {
+                {content.map((item) => {
                     if(item.type === 'paragraph') {
-                        return <p key={index}>{item.content}</p>
+                        return <p key={item.content}>{item.content}</p>
                     } else if(item.type === 'link') {
-                        return <p key={index}><a href="">{item.content}</a></p>
+                        return <p key={item.content}><a href="">{item.content}</a></p>
                     }
                 })}
             </div>
 
-            <form className={styles.commentForm}>
+            <form onSubmit={handleCreateNewComment} className={styles.commentForm}>
                 <strong>Deixa seu feedback</strong>
-                <textarea placeholder='Deixe  um comentário' />
+
+                <textarea
+                    onChange={handleNewCommentChange}
+                    name="comment"
+                    value={newCommentText}
+                    placeholder='Deixe  um comentário'      
+                    //"onInvalid altera o valor do erro quando bate no required"
+                    onInvalid={handleNewComentInvalid}
+                    required
+                />
 
                 <footer>
-                    <button type="submit">Comentar</button>
+                    {/* o disbled está virificando se tem alguma coisa no campo de texto, se tiver ele libera o botão */}
+                    <button type="submit" disabled={newCommentText.length === 0}>Comentar</button>
                 </footer>
             </form>
 
             <div className={styles.commentList}>
-                <Comment />
-                <Comment />
-                <Comment />
+                { comments.map((item) => {
+                    return ( 
+                        <Comment 
+                            key={item} 
+                            content={item} 
+                            onDeleteComment={deleteComment} 
+                        /> 
+                    )
+                })}
             </div>
         </article>
     </div>
